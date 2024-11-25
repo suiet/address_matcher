@@ -1,16 +1,16 @@
 # Address Hash Matcher Tool
 
-A Python tool for secure address hashing and matching using RSA encryption. This tool provides two main functionalities:
+A Python tool for secure address hashing and matching using HMAC-SHA256. This tool provides two main functionalities:
 
-1. Generate encrypted hashes for a list of addresses
-2. Match original addresses against a list of encrypted hashes
+1. Generate secure hashes for a list of addresses
+2. Match original addresses against a list of hashed addresses
 
 ## Features
 
-- RSA encryption-based address hashing
+- HMAC-SHA256 based secure hashing
 - Command-line interface for easy usage
 - CSV file support for input and output
-- Persistent key storage
+- Persistent secret key storage
 - Error handling and logging
 - Support for large address lists
 
@@ -30,11 +30,7 @@ git clone <repository-url>
 # or download script.py directly
 ```
 
-2. Install required dependencies:
-
-```bash
-pip install pycryptodome
-```
+2. No additional dependencies required (uses Python standard library)
 
 ## Usage
 
@@ -47,59 +43,51 @@ All input CSV files should:
 - Contain a header row
 - Have only one column
 - For addresses: column should contain the plain addresses
-- For hashed addresses: column should contain the encrypted hashes
+- For hashed addresses: column should contain the hashed addresses
 
-# Address Hash Matcher Tool
+## Secret Key Management
 
-## Private Key Management
+The tool uses a secret key for generating secure hashes. There are several ways to provide the secret key:
 
-### Generating a Private Key
-
-There are several ways to generate a private key:
-
-1. **Using the Tool Automatically**
+1. **Using Command Line**
 
 ```bash
-# The tool will automatically generate a private key if none is provided
-python script.py hash -i addresses.csv -o hashed.csv
+# Provide secret key directly
+python script.py hash -i addresses.csv -o hashed.csv -k "your-secret-key"
 ```
 
-2. **Using OpenSSL (Recommended for Production)**
+2. **Using Automatic Key Management**
 
 ```bash
-# Generate a 2048-bit RSA private key
-openssl genpkey -algorithm RSA -out private_key.pem -pkeyopt rsa_keygen_bits:2048
-
-# Optional: Extract public key if needed
-openssl rsa -pubout -in private_key.pem -out public_key.pem
+# The tool will automatically generate and save a secret key if none is provided
+python script.py hash -i addresses.csv -o hashed.csv
 ```
 
 Key Management Tips:
 
-- If no key file is specified, a new key pair will be generated for each run
-- For consistent results across multiple runs, use the same key file
-- Keep your private key secure and backed up
+- If no key is specified, a random 32-byte key will be generated and saved to `secret.key`
+- For consistent results across multiple runs, use the same secret key
+- Keep your secret key secure and backed up
 - The key file will be automatically created if it doesn't exist
-- Recommended key size is 2048 bits or larger
 
 ### Command: Generate Hashed Addresses
 
-Use this command to generate encrypted hashes for a list of addresses.
+Use this command to generate secure hashes for a list of addresses.
 
 ```bash
-python script.py hash -i <input_file> -o <output_file> [-k <key_file>]
+python script.py hash -i <input_file> -o <output_file> [-k <secret_key>]
 ```
 
 Parameters:
 
 - `-i, --input`: Input CSV file containing addresses
 - `-o, --output`: Output CSV file for hashed addresses
-- `-k, --key`: (Optional) Private key file path
+- `-k, --key`: (Optional) Secret key string
 
 Example:
 
 ```bash
-python script.py hash -i addresses.csv -o hashed_addresses.csv -k private_key.pem
+python script.py hash -i addresses.csv -o hashed_addresses.csv -k "my-secret-key"
 ```
 
 ### Command: Match Addresses with Hashes
@@ -107,7 +95,7 @@ python script.py hash -i addresses.csv -o hashed_addresses.csv -k private_key.pe
 Use this command to find matching addresses between an original address list and a hashed address list.
 
 ```bash
-python script.py match -a <addresses_file> -s <hashed_file> -o <output_file> [-k <key_file>]
+python script.py match -a <addresses_file> -s <hashed_file> -o <output_file> [-k <secret_key>]
 ```
 
 Parameters:
@@ -115,20 +103,13 @@ Parameters:
 - `-a, --addresses`: CSV file with original addresses
 - `-s, --hashed`: CSV file with hashed addresses
 - `-o, --output`: Output CSV file for matched addresses
-- `-k, --key`: (Optional) Private key file path
+- `-k, --key`: (Optional) Secret key string
 
 Example:
 
 ```bash
-python script.py match -a original_addresses.csv -s hashed_addresses.csv -o matched_addresses.csv -k private_key.pem
+python script.py match -a original_addresses.csv -s hashed_addresses.csv -o matched_addresses.csv -k "my-secret-key"
 ```
-
-### Private Key Management
-
-- If no key file is specified, a new key pair will be generated for each run
-- For consistent results across multiple runs, use the same key file
-- Keep your private key secure and backed up
-- The key file will be automatically created if it doesn't exist
 
 ## Example Files
 
@@ -138,16 +119,14 @@ python script.py match -a original_addresses.csv -s hashed_addresses.csv -o matc
 address
 0x64e5c44a6f1276ac2ff623ac54e63e5a61a576906b3ec427ac87fe8bf5615d2952
 0x64e5c44a6f1276ac2ff623ac54e63e5a61a576906b3ec427ac87fe8bf5615d2952
-0x64e5c44a6f1276ac2ff623ac54e63e5a61a576906b3ec427ac87fe8bf5615d2952
 ```
 
 ### hashed_addresses.csv (output)
 
 ```csv
 hashed_address
-<base64_encoded_hash_1>
-<base64_encoded_hash_2>
-<base64_encoded_hash_3>
+7f8b82ca2c9a8d89e6dfb4510916a72b4dfd0d8f8b7a84b831c0470e3b01a801
+7f8b82ca2c9a8d89e6dfb4510916a72b4dfd0d8f8b7a84b831c0470e3b01a801
 ```
 
 ### matched_addresses.csv (output)

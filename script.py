@@ -15,18 +15,11 @@ class AddressHashMatcher:
         """
         if secret_key:
             self.secret_key = secret_key.encode()
+            self.is_key_auto_generated = False
         else:
-            key_file = 'secret.key'
-            if os.path.exists(key_file):
-                with open(key_file, 'rb') as f:
-                    self.secret_key = f.read()
-                print(f"Loaded existing secret key from: {key_file}")
-            else:
-                # Generate a random 32-byte key
-                self.secret_key = os.urandom(32)
-                with open(key_file, 'wb') as f:
-                    f.write(self.secret_key)
-                print(f"Generated and saved new secret key to: {key_file}")
+            self.is_key_auto_generated = True
+            self.secret_key = os.urandom(32)
+            print(f"Generated and using new secret key: {self.secret_key.hex()}")
 
     def _hash_address(self, address: str) -> str:
         """
@@ -101,6 +94,11 @@ class AddressHashMatcher:
             hashed_file: Path to hashed addresses CSV file
             output_file: Path to output CSV file for matched addresses
         """
+
+        if self.is_key_auto_generated:
+            print("No secret key provided. Please provide a secret key to match addresses using -k flag.")
+            sys.exit(1)
+
         try:
             # Read original addresses
             with open(addresses_file, 'r') as f:
